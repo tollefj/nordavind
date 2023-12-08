@@ -1,0 +1,9 @@
+bitsandbytes
+transformers
+peft
+accelerate
+datasets
+scipy
+ipywidgets
+matplotlib
+sentencepiece
