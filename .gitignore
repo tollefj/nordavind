@@ -1,0 +1,4 @@
+!train/train.py
+train/
+logs/
+wandb/
