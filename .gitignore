@@ -1,4 +1,5 @@
 !train/train.py
+!train/scrapbook/*.py
 train/
 logs/
 wandb/
