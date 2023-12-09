@@ -1,5 +1,5 @@
-!train/train.py
-!train/scrapbook/*.py
-train/
+train/mistral-*
+train/nordavind-*
 logs/
 wandb/
+train/*.out
