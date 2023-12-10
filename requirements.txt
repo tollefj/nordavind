@@ -7,3 +7,5 @@ scipy
 ipywidgets
 matplotlib
 sentencepiece
+sacremoses
+nltk

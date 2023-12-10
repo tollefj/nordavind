@@ -3,3 +3,4 @@ train/nordavind-*
 logs/
 wandb/
 train/*.out
+**/*.out

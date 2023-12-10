@@ -3,7 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 from transformers import pipeline
 
-pipe = pipeline("translation", model="Helsinki-NLP/opus-mt-en-gmq", device="cuda")
+pipe = pipeline("translation", model="Helsinki-NLP/opus-mt-en-gmq")
 
 train_df = pd.read_csv("mosaic_train.csv")
 test_df = pd.read_csv("mosaic_test.csv")
