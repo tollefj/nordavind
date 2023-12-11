@@ -34,21 +34,21 @@ max_length = 768
 
 system_prompt = 'Du er "Nordavind", en hjelpsom assistent.'
 
-def make_prompt(inst, inp, out):
-    return f"""<s>{system_prompt} [INST] {inst} {inp} [/INST] \\n {out} </s>"""
+def make_prompt(inst, res):
+    return f"""<s>{system_prompt} [INST] {inst} [/INST] \\n {res} </s>"""
 
 def tknz(example):
     inst = example["instruction"]
-    inp = example["input"]
-    out = example["output"]
+    res = example["response"]
     inst = inst.strip() if inst is not None else ""
-    inp = inp.strip() if inp is not None else ""
-    out = out.strip() if out is not None else ""
-    return tokenizer(make_prompt(inst, inp, out), truncation=True, max_length=max_length, padding="max_length")
+    res = res.strip() if res is not None else ""
+    return tokenizer(make_prompt(inst, res), truncation=True, max_length=max_length, padding="max_length")
 
-print(make_prompt("Jeg vil at du skal sortere følgende:", inp="3 2 6 1", out="1 2 3 6"))
+print(make_prompt("Jeg vil at du skal sortere følgende: 1 6 3 2", res="1 2 3 6"))
 
-dataset = load_dataset("tollefj/nor-mosaic-instruct")
+# dataset = load_dataset("tollefj/nor-mosaic-instruct")
+dataset_id = "tollefj/nor-instruct-v2"
+dataset = load_dataset(dataset_id)
 tokenized_val_dataset = dataset["test"].map(tknz)
 tokenized_train_dataset = dataset["train"].map(tknz)
 print(tokenized_train_dataset[1]['input_ids'])
@@ -57,11 +57,10 @@ model.gradient_checkpointing_enable()
 model = prepare_model_for_kbit_training(model)
 
 config = LoraConfig(
-    r=32,
-    lora_alpha=64,
+    # leaving r and alpha to defaults
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj", "lm_head"],
     bias="none",
-    lora_dropout=0.1,
+    lora_dropout=0.05,
     task_type="CAUSAL_LM",
 )
 
@@ -73,11 +72,11 @@ fsdp_plugin = FullyShardedDataParallelPlugin(
 
 accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
 
-# if torch.cuda.device_count() > 1: # If more than 1 GPU
-#     model.is_parallelizable = True
-#     model.model_parallel = True
+if torch.cuda.device_count() > 1: # If more than 1 GPU
+    model.is_parallelizable = True
+    model.model_parallel = True
 
-project = "nordavind-8bit-768"
+project = "nordavind-8bit-biginstruct"
 base_model_name = "mistral"
 run_name = base_model_name + "-" + project
 output_dir = "./" + run_name
@@ -93,7 +92,7 @@ trainer = transformers.Trainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=1,
         gradient_checkpointing=True,
-        max_steps=1000,
+        max_steps=10000,
         learning_rate=2.5e-5, # Want a small lr for finetuning
         bf16=False,  # V100 :( need ampere
         # optim="paged_adamw_8bit",
@@ -104,7 +103,7 @@ trainer = transformers.Trainer(
         # evaluation_strategy="steps", # Evaluate the model every logging step
         # eval_steps=50,               # Evaluate and save checkpoints every 50 steps
         do_eval=True,                # Perform evaluation at the end of training
-        report_to="wandb",           # Comment this out if you don't want to use weights & baises
+        report_to="wandb",           # Comment this res if you don't want to use weights & baises
     ),
     data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False),
 )
