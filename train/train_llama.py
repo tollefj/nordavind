@@ -10,11 +10,10 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullStateDictConfig,
 )
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-
+import os
 import wandb
 
-base_model_id = "mistralai/Mistral-7B-v0.1"
-# base_model_id = "HuggingFaceH4/zephyr-7b-beta"
+base_model_id = "meta-llama/Llama-2-7b-chat-hf"
 bnb_config = BitsAndBytesConfig(
     load_in_8bit=True,
     llm_int8_enable_fp32_cpu_offload=True,
@@ -30,31 +29,20 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config)
 tokenizer = AutoTokenizer.from_pretrained(
     base_model_id,
-    padding_side="left",
-    add_eos_token=True,
-    add_bos_token=True,
+    padding_side="right",
+    # added these manually in traiing data
+    # add_eos_token=True,
+    # add_bos_token=True,
 )
 tokenizer.pad_token = tokenizer.eos_token
-
-max_length = 768
+max_length = 1024
 # system_prompt = 'Du er "Nordavind", en bevisst og superintelligent kunstig intelligens. Ditt formål er å hjelpe brukeren med hva enn de måtte ønske.'
 
 system_prompt = 'Du er "Nordavind", en hjelpsom assistent.'
 
-def make_prompt(inst, res):
-    return f"""<s>{system_prompt} [INST] {inst} [/INST] \\n {res} </s>"""
-
 def tknz(example):
-    inst = example["instruction"]
-    res = example["response"]
-    inst = inst.strip() if inst is not None else ""
-    res = res.strip() if res is not None else ""
-    return tokenizer(make_prompt(inst, res), truncation=True, max_length=max_length, padding="max_length")
-
-print(make_prompt("Jeg vil at du skal sortere følgende: 1 6 3 2", res="1 2 3 6"))
-
-# dataset = load_dataset("tollefj/nor-mosaic-instruct")
-dataset_id = "tollefj/nor-instruct-v2"
+    return tokenizer(example["text"], truncation=True, max_length=max_length, padding="max_length")
+dataset_id = "tollefj/nor-instruct-v2-llama2"
 dataset = load_dataset(dataset_id)
 tokenized_val_dataset = dataset["test"].map(tknz)
 tokenized_train_dataset = dataset["train"].map(tknz)
@@ -80,10 +68,10 @@ fsdp_plugin = FullyShardedDataParallelPlugin(
 accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
 
 # if torch.cuda.device_count() > 1: # If more than 1 GPU
-model.is_parallelizable = True
-model.model_parallel = True
+# model.is_parallelizable = True
+# model.model_parallel = True
 
-project = "nordavind-8bit-biginstruct"
+project = "nollama2-7b-chat"
 base_model_name = "mistral"
 run_name = base_model_name + "-" + project
 output_dir = "./" + run_name
@@ -96,19 +84,19 @@ trainer = transformers.Trainer(
     args=transformers.TrainingArguments(
         output_dir=output_dir,
         warmup_steps=1,
-        per_device_train_batch_size=4,
+        per_device_train_batch_size=2,
         gradient_accumulation_steps=1,
         gradient_checkpointing=True,
         max_steps=3000,
         learning_rate=2.5e-5, # Want a small lr for finetuning
         bf16=False,  # V100 :( need ampere
-        optim="paged_adamw_8bit",
+        # optim="paged_adamw_8bit",
         logging_steps=25,              # When to start reporting loss
         logging_dir="./logs",        # Directory for storing logs
         save_strategy="steps",       # Save the model checkpoint every logging step
-        save_steps=100,                # Save checkpoints every 50 steps
+        save_steps=50,                # Save checkpoints every 50 steps
         evaluation_strategy="steps", # Evaluate the model every logging step
-        eval_steps=100,               # Evaluate and save checkpoints every 50 steps
+        eval_steps=50,               # Evaluate and save checkpoints every 50 steps
         do_eval=True,                # Perform evaluation at the end of training
         report_to="wandb",           # Comment this res if you don't want to use weights & baises
     ),
