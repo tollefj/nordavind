@@ -1,5 +1,6 @@
 train/mistral-*
 train/nordavind-*
+.ipynb_checkpoints
 logs/
 wandb/
 train/*.out
