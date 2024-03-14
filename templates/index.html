@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nordavind-7B</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Nordavind-7B inference API x</h1>
+    <form id="textForm">
+        <label for="inputText">Tekst:</label><br>
+        <textarea id="inputText" name="inputText" rows="4" cols="50">Hva er IDI ved NTNU? Svar med én setning.</textarea><br>
+        <label for="tokens">Tokens:</label><br>
+        <input type="number" id="tokens" name="tokens" value="50" step="20"><br>
+        <label for="temp">Temperatur:</label><br>
+        <input type="number" id="temp" name="temp" step="0.1" value="0.75"><br><br>
+        <button type="submit">Send</button>
+    </form>
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('textForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const text = formData.get('inputText');
+            const tokens = formData.get('tokens');
+            const temp = formData.get('temp');
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    tokens: parseInt(tokens),
+                    temp: parseFloat(temp)
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').innerText = data.response;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        document.getElementById('textForm').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

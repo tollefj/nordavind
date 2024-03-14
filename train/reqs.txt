@@ -1,0 +1,11 @@
+accelerate
+bitsandbytes
+datasets
+evaluate
+ninja
+packaging
+tensorboard
+torch
+transformers
+git+https://github.com/huggingface/peft
+git+https://github.com/huggingface/trl

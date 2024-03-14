@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+}
+
+/* Header styles */
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff;
+}
+
+/* Form styles */
+input[type="text"], textarea {
+    background-color: #212121;
+    color: #ffffff;
+    border: 1px solid #424242;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* Button styles */
+button {
+    background-color: #4caf50;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Other element styles */
+a {
+    color: #4caf50;
+}
+
+a:hover {
+    color: #45a049;
+}
