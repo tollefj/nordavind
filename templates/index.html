@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Nordavind-7B inference API x</h1>
+    <h1>Nordavind-7B inference API</h1>
     <form id="textForm">
         <label for="inputText">Tekst:</label><br>
         <textarea id="inputText" name="inputText" rows="4" cols="50">Hva er IDI ved NTNU? Svar med én setning.</textarea><br>
@@ -16,6 +16,7 @@
         <label for="temp">Temperatur:</label><br>
         <input type="number" id="temp" name="temp" step="0.1" value="0.75"><br><br>
         <button type="submit">Send</button>
+        <button type="button" onclick="fetch('/reset', {method: 'POST'})">Reset</button>
     </form>
     <div id="output"></div>
 
